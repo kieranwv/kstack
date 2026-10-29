@@ -1,0 +1,8 @@
+default: true
+MD013: false
+MD040: false
+# Case files start at "## Prompt" and have no title line.
+MD041: false
+MD024:
+  siblings_only: true
+frontMatter: '^---(\r?\n|\r)[\s\S]+?(\r?\n|\r)---$'

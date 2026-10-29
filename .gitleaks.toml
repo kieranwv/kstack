@@ -1,0 +1,8 @@
+title = "kstack"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "The license copyright line is not a credential."
+paths = ['''(^|/)LICENSE$''']
