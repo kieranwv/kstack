@@ -9,9 +9,10 @@ kstack is a small, strict rule set. Each rule exists because an agent got someth
 | Skill | Rule |
 | --- | --- |
 | [verify-like-a-user](./skills/principle-verify-like-a-user/SKILL.md) | Before calling work done, run it the way a user would. A passing build is not done. |
-| [verify-before-you-speak](./skills/principle-verify-before-you-speak/SKILL.md) | Never report a name, status, or result you have not checked. If you could not check it, say so. |
-| [single-writer](./skills/principle-single-writer/SKILL.md) | One owner writes each repo. Keep PRs small, one change each. |
+| [verify-before-you-speak](./skills/principle-verify-before-you-speak/SKILL.md) | Never report a name, status, or result you have not checked. If you could not check it, say so. Cite the full link, and do not reopen finished work. |
+| [single-writer](./skills/principle-single-writer/SKILL.md) | One owner writes each repo. Keep PRs small, one change each. Do the work in a cloud agent, and delete branches you created once the work is merged or abandoned. |
 | [designated-directory](./skills/principle-designated-directory/SKILL.md) | Write files only where you were told to. |
+| [configured-deploy](./skills/principle-configured-deploy/SKILL.md) | After a release is pushed to the main branch, let the configured auto-deploy handle it. |
 
 ## How a rule gets in
 
