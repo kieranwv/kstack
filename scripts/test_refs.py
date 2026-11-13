@@ -52,6 +52,7 @@ class RefTests(unittest.TestCase):
         )
         self.assertEqual(skills["principle-verify-before-you-speak"].extends, ())
         self.assertEqual(skills["principle-designated-directory"].extends, ())
+        self.assertEqual(skills["principle-real-apis-only"].extends, ())
         for skill in skills.values():
             self.assertEqual(skill.audience, "agent")
             self.assertEqual(skill.status, "active")
