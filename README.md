@@ -14,6 +14,7 @@ Each rule exists because an agent got something wrong, and each one stays only w
 | [verify-before-you-speak](./skills/principle-verify-before-you-speak/SKILL.md) | Never report a name, status, or result you have not checked. If you could not check it, say so. | |
 | [single-writer](./skills/principle-single-writer/SKILL.md) | One owner writes each repo. Keep pull requests small, one change each. | [separate-before-serializing-shared-state](https://github.com/cursor/plugins/blob/main/pstack/skills/principle-separate-before-serializing-shared-state/SKILL.md) |
 | [designated-directory](./skills/principle-designated-directory/SKILL.md) | Write files only where you were told to. | |
+| [real-apis-only](./skills/principle-real-apis-only/SKILL.md) | Build the frontend only against backend endpoints and fields that actually exist. | |
 
 An empty pstack cell means this repo does not treat that rule as an extension of a current pstack skill. `extends` in the skill frontmatter is the same list, and `scripts/check_refs.py` checks each name against pstack's default branch.
 
