@@ -6,6 +6,8 @@ Generated from `skills/` by `scripts/generate_rules_doc.py`. Do not edit this fi
 
 Skill: `skills/principle-verify-like-a-user/SKILL.md`
 
+Extends pstack: `principle-prove-it-works`.
+
 Use before calling work done. Run the change the way a user would, and do not treat a passing build as done.
 
 ### Rule
@@ -67,6 +69,8 @@ These are illustrations of the rule, not records of a particular task:
 ## R3. Single writer
 
 Skill: `skills/principle-single-writer/SKILL.md`
+
+Extends pstack: `principle-separate-before-serializing-shared-state`.
 
 Use when changing a repository. One writer owns that repository, and each pull request is one change.
 

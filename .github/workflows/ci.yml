@@ -28,8 +28,8 @@ jobs:
           BASE_REF: ${{ github.base_ref || github.event.repository.default_branch }}
         run: git fetch --no-tags origin "${BASE_REF}"
 
-      - name: Rule number tests
-        run: python3 scripts/test_rules.py
+      - name: Tests
+        run: python3 -m unittest discover -s scripts -p 'test_*.py'
 
       - name: Skill layout, evals, and rule numbers
         env:
@@ -38,6 +38,23 @@ jobs:
 
       - name: Generated rules document
         run: python3 scripts/generate_rules_doc.py --check
+
+      - name: Public content
+        run: python3 scripts/check_public_content.py
+
+      - name: Fetch pstack main
+        run: |
+          git clone --depth 1 --branch main --filter=blob:none --sparse \
+            https://github.com/cursor/plugins.git "$RUNNER_TEMP/cursor-plugins"
+          git -C "$RUNNER_TEMP/cursor-plugins" sparse-checkout set pstack
+
+      - name: pstack extends targets
+        run: python3 scripts/check_refs.py --pstack "$RUNNER_TEMP/cursor-plugins/pstack"
+
+      - name: Eval hashes
+        env:
+          BASE_REF: ${{ github.base_ref || github.event.repository.default_branch }}
+        run: python3 scripts/eval_hash.py check --base "origin/${BASE_REF}"
 
       - name: markdownlint
         run: npx --yes markdownlint-cli@0.44.0 "**/*.md"

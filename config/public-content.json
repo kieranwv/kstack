@@ -1,0 +1,9 @@
+{
+  "terms": ["Maia", "Kieran", "飞书"],
+  "patterns": [
+    "\\boc_[0-9A-Za-z]{8,}\\b",
+    "\\bom_[0-9A-Za-z]{8,}\\b",
+    "\\bou_[0-9A-Za-z]{8,}\\b"
+  ],
+  "allow_paths": ["LICENSE"]
+}

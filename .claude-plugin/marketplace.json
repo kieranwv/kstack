@@ -1,0 +1,13 @@
+{
+  "name": "kstack",
+  "owner": {
+    "name": "kstack"
+  },
+  "plugins": [
+    {
+      "name": "kstack",
+      "source": "./",
+      "description": "General agent rules and evals layered on pstack. pstack stays the base layer and is not pinned."
+    }
+  ]
+}

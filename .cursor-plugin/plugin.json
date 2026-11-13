@@ -1,0 +1,16 @@
+{
+  "name": "kstack",
+  "displayName": "kstack",
+  "version": "0.1.0",
+  "description": "General agent rules and evals layered on pstack. pstack stays the base layer and is not pinned.",
+  "author": {
+    "name": "kstack"
+  },
+  "homepage": "https://github.com/kieranwv/kstack",
+  "repository": "https://github.com/kieranwv/kstack",
+  "license": "MIT",
+  "keywords": ["kstack", "rules", "evals", "pstack", "skills"],
+  "category": "developer-tools",
+  "tags": ["rules", "evals", "skills"],
+  "skills": "./skills/"
+}
