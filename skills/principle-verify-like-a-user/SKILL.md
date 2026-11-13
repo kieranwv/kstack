@@ -3,6 +3,7 @@ name: principle-verify-like-a-user
 description: "Use before calling work done. Run the change the way a user would, and do not treat a passing build as done."
 rule: R1
 status: active
+extends: principle-prove-it-works
 ---
 
 # Verify like a user

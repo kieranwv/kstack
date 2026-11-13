@@ -5,6 +5,9 @@ Required headings in each SKILL.md are Rule, Why, and Failure examples.
 Source lines are not required and are rejected when present. Rule numbers are
 unique and contiguous from R1. Compared with --base, a number that already
 exists must keep its skill, and new numbers may only be appended.
+
+`extends` and `audience` are checked for shape here. Whether an extends
+target exists on pstack is `scripts/check_refs.py`.
 """
 
 from __future__ import annotations

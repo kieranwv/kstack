@@ -3,6 +3,7 @@ name: principle-single-writer
 description: "Use when changing a repository. One writer owns that repository, and each pull request is one change."
 rule: R3
 status: active
+extends: principle-separate-before-serializing-shared-state
 ---
 
 # Single writer

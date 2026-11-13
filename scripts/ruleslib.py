@@ -1,6 +1,27 @@
 #!/usr/bin/env python3
 """Readers and checks shared by the rule-set scripts.
 
+Downstream rule sets should import this module instead of parsing SKILL.md
+themselves. The stable surface is:
+
+- ``ROOT``, ``SKILLS_DIR``, ``DIST_PATH``, ``README_PATH``
+- ``STATUSES`` (``active``, ``retired``, ``moved``), ``AUDIENCES``
+  (``agent``, ``author``, ``both``), ``DEFAULT_STATUS``, ``DEFAULT_AUDIENCE``
+- ``Skill``: ``slug``, ``path``, ``meta``, ``body``, ``number``, ``title``,
+  ``status``, ``extends``, ``audience``
+- ``split_frontmatter``, ``load_skill``, ``iter_skill_dirs``
+- ``parse_extends``, ``section_body``, ``rubric_criteria``
+- ``render_rules``, ``collect_errors``, ``monotonicity_errors``
+
+``extends`` is a comma-separated list of pstack skill directory names (the
+folder under ``pstack/skills/`` that contains ``SKILL.md``). It is optional.
+This module checks the shape only. ``scripts/check_refs.py`` checks that each
+name exists on pstack's default branch.
+
+``audience`` defaults to ``agent`` when omitted. ``status`` defaults to
+``active``. ``moved`` keeps the rule number and marks a rule whose text now
+lives somewhere else. Rule numbers still only grow.
+
 SKILL.md headings this package requires, in English:
 
 - Rule
@@ -27,9 +48,14 @@ README_PATH = ROOT / "README.md"
 REQUIRED_HEADINGS = ("Rule", "Why", "Failure examples")
 FORBIDDEN_HEADINGS = ("Source", "Provenance")
 CASE_HEADINGS = ("Prompt", "Expected")
-ALLOWED_FRONTMATTER = ("name", "description", "rule", "status")
+ALLOWED_FRONTMATTER = ("name", "description", "rule", "status", "extends", "audience")
+STATUSES = ("active", "retired", "moved")
+AUDIENCES = ("agent", "author", "both")
+DEFAULT_STATUS = "active"
+DEFAULT_AUDIENCE = "agent"
 RULE_RE = re.compile(r"^R([1-9][0-9]*)$")
 SLUG_RE = re.compile(r"^principle-[a-z0-9]+(?:-[a-z0-9]+)*$")
+EXTENDS_SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 HEADING_RE = re.compile(r"^(#{1,6})[ \t]+(.+?)[ \t]*$")
 SOURCE_LINE_RE = re.compile(r"(?im)^(source|provenance)\s*:")
 CRITERION_RE = re.compile(r"^\d+\.\s+Pass:\s+\S.+\s+Fail:\s+\S.+")
@@ -45,6 +71,8 @@ class Skill:
     number: int
     title: str
     status: str
+    extends: tuple[str, ...]
+    audience: str
 
 
 def split_frontmatter(text: str) -> tuple[dict[str, str], str]:
@@ -125,6 +153,31 @@ def section_body(body: str, name: str, level: int = 2) -> str:
     return "\n".join(lines[start:end]).strip()
 
 
+def parse_extends(value: str) -> tuple[str, ...]:
+    """Split an ``extends`` value into pstack skill directory names.
+
+    One name, or several separated by commas. Each name is the directory under
+    ``pstack/skills/``, not a playbook path and not a commit.
+    """
+    parts = [part.strip() for part in value.split(",")]
+    if not value.strip() or any(not part for part in parts):
+        raise ValueError("extends is empty")
+    for part in parts:
+        if not EXTENDS_SLUG_RE.match(part):
+            raise ValueError(f"extends target {part!r} is not a pstack skill name")
+    if len(parts) != len(set(parts)):
+        raise ValueError("extends repeats a target")
+    return tuple(parts)
+
+
+def rubric_criteria(text: str) -> list[str]:
+    return [
+        line
+        for line in section_body(text, "Criteria").splitlines()
+        if CRITERION_RE.match(line)
+    ]
+
+
 def load_skill(folder: Path) -> Skill:
     path = folder / "SKILL.md"
     meta, body = split_frontmatter(path.read_text(encoding="utf-8"))
@@ -137,9 +190,13 @@ def load_skill(folder: Path) -> Skill:
     rule_match = RULE_RE.match(meta["rule"])
     if not rule_match:
         raise ValueError(f"rule must look like R1, got {meta['rule']!r}")
-    status = meta.get("status", "active")
-    if status not in ("active", "retired"):
-        raise ValueError(f"status must be active or retired, got {status!r}")
+    status = meta.get("status", DEFAULT_STATUS)
+    if status not in STATUSES:
+        raise ValueError(f"status must be one of {', '.join(STATUSES)}, got {status!r}")
+    audience = meta.get("audience", DEFAULT_AUDIENCE)
+    if audience not in AUDIENCES:
+        raise ValueError(f"audience must be one of {', '.join(AUDIENCES)}, got {audience!r}")
+    extends = parse_extends(meta["extends"]) if "extends" in meta else ()
     found = headings(body)
     title = next((text for level, text in found if level == 1), "")
     if not title:
@@ -152,6 +209,8 @@ def load_skill(folder: Path) -> Skill:
         number=int(rule_match.group(1)),
         title=title,
         status=status,
+        extends=extends,
+        audience=audience,
     )
 
 
@@ -177,7 +236,7 @@ def layout_errors(folder: Path) -> list[str]:
         return errors
     evals = folder / "evals"
     eval_present = {path.name for path in evals.iterdir()}
-    eval_allowed = {"rubric.md", "cases"}
+    eval_allowed = {"rubric.md", "cases", "eval-hash.json", "last-run.md"}
     if eval_present - eval_allowed:
         errors.append(f"{prefix}: unexpected eval files {sorted(eval_present - eval_allowed)}")
     if not (evals / "rubric.md").is_file():
@@ -233,11 +292,7 @@ def rubric_errors(folder: Path) -> list[str]:
         errors.append(f"{prefix}: rubric needs an h1 'Rubric'")
     if not any(level == 2 and text_ == "Criteria" for level, text_ in found):
         errors.append(f"{prefix}: rubric needs ## Criteria")
-    criteria = [
-        line
-        for line in section_body(text, "Criteria").splitlines()
-        if CRITERION_RE.match(line)
-    ]
+    criteria = rubric_criteria(text)
     if len(criteria) < 3:
         errors.append(f"{prefix}: rubric needs at least three 'Pass: ... Fail: ...' criteria")
     return errors
@@ -398,12 +453,19 @@ def render_rules(skills: list[Skill]) -> str:
     for skill in ordered:
         chunks.append(f"## R{skill.number}. {skill.title}")
         chunks.append("")
-        if skill.status == "retired":
-            chunks.append("Status: retired.")
+        if skill.status != DEFAULT_STATUS:
+            chunks.append(f"Status: {skill.status}.")
             chunks.append("")
         relative = skill.path.relative_to(ROOT).as_posix()
         chunks.append(f"Skill: `{relative}`")
         chunks.append("")
+        if skill.extends:
+            shown = ", ".join(f"`{name}`" for name in skill.extends)
+            chunks.append(f"Extends pstack: {shown}.")
+            chunks.append("")
+        if skill.audience != DEFAULT_AUDIENCE:
+            chunks.append(f"Audience: {skill.audience}.")
+            chunks.append("")
         chunks.append(skill.meta["description"])
         chunks.append("")
         chunks.append(demote_body(skill.body))
